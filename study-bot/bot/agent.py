@@ -14,14 +14,14 @@ from bot.tools import (
     concept_simplifier
 )
 
-# 1. LLM
+# 1. LLM — use lite model (higher free quota)
 llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash-lite",
+    model="gemini-2.5-flash",   # ← lighter = more free quota
     google_api_key=os.getenv("GEMINI_API_KEY"),
     temperature=0.7
 )
 
-# 2. All 7 tools
+# 2. Tools
 tools = [
     get_current_datetime,
     calculator,
@@ -32,41 +32,44 @@ tools = [
     concept_simplifier
 ]
 
-# 3. System prompt
-SYSTEM_PROMPT = """You are an intelligent and friendly study assistant for students.
+# 3. Shorter system prompt — fewer tokens!
+SYSTEM_PROMPT = """You are a friendly study assistant for students.
+Use the right tool for each request:
+- quiz_generator → for quizzes
+- study_planner → for study schedules
+- flashcard_maker → for flashcards
+- concept_simplifier → for simple explanations
+- search_wikipedia → for facts
+- calculator → for maths
+- get_current_datetime → for date/time
+Be concise, encouraging, and warm. This is WhatsApp — keep replies short!"""
 
-You have access to these special tools — use them smartly:
-- 📝 quiz_generator → when student wants to be quizzed on a topic
-- 🗓️ study_planner → when student wants a study schedule
-- 🔤 flashcard_maker → when student wants flashcards to memorize
-- 💡 concept_simplifier → when student finds something confusing
-- 🔍 search_wikipedia → for factual topic information
-- 🔢 calculator → for any math calculation
-- 📅 get_current_datetime → for current date/time
+# 4. Config
+HISTORY_WINDOW = 6    # ← only last 6 messages sent to Gemini
+MAX_INPUT_LENGTH = 500  # ← cap incoming message length
 
-Rules:
-- Always pick the RIGHT tool for the right question
-- Keep responses concise — this is WhatsApp!
-- Be encouraging, warm and motivating
-- Remember the student's name and subjects throughout
-- Never say you can't help — always try your best!"""
-
-# 4. Create Agent
+# 5. Create Agent
 agent = create_react_agent(llm, tools)
 
-# 5. Per-user memory store
+# 6. Per-user memory store
 memory_store = {}
 
 def get_bot_response(message: str, user_id: str) -> str:
     chat_history = memory_store.get(user_id, [])
+
+    # ✅ QUOTA SAVER — keep only last 6 messages (3 exchanges)
+    # Just like RAG chunking — send only relevant recent context!
+    chat_history = chat_history[-6:]
 
     messages = [SystemMessage(content=SYSTEM_PROMPT)] + chat_history + [HumanMessage(content=message)]
 
     result = agent.invoke({"messages": messages})
     response = result["messages"][-1].content
 
-    chat_history.append(HumanMessage(content=message))
-    chat_history.append(AIMessage(content=response))
-    memory_store[user_id] = chat_history
+    # Save full history but only send recent chunk
+    full_history = memory_store.get(user_id, [])
+    full_history.append(HumanMessage(content=message))
+    full_history.append(AIMessage(content=response))
+    memory_store[user_id] = full_history
 
     return response
