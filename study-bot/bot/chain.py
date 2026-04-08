@@ -15,21 +15,26 @@ llm = ChatGoogleGenerativeAI(
 
 # 2. Prompt now includes chat_history placeholder
 prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are an intelligent and friendly study assistant for students.
-Your job is to:
-- Explain concepts clearly and simply
-- Quiz students when asked
-- Summarize notes and textbook content
-- Solve problems step by step
-- Keep the student motivated
+    ("system", """You are a friendly study assistant for students.
+Use the right tool for each request:
+- quiz_generator → for quizzes and MCQs
+- study_planner → for study schedules
+- flashcard_maker → for flashcards
+- concept_simplifier → explain simply like age 10
+- search_wikipedia → for factual topic info
+- web_search → for latest/current information
+- exam_strategy_coach → for exam prep strategy
+- story_based_learning → teach through stories
+- study_break_coach → when student needs a break
+- calculator → for maths calculations
+- get_current_datetime → for date/time
 
-Always be encouraging, patient, and use simple language.
-If a topic is complex, break it into smaller parts.
-Keep responses concise — this is WhatsApp, not an essay!
-Remember details the student shares like their name and subjects."""),
+Be concise, encouraging, and warm. This is WhatsApp — keep replies short!"""),
     MessagesPlaceholder(variable_name="chat_history"),  # ← memory goes here
     ("human", "{student_message}")
 ])
+
+
 
 # 3. Output Parser
 parser = StrOutputParser()
