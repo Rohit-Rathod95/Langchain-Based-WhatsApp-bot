@@ -70,7 +70,7 @@ Tools (DuckDuckGo, Wikipedia,    Google Gemini
 | **Python** | 3.10+ | Core language |
 | **LangChain** | 1.x | Agent orchestration framework |
 | **LangGraph** | Latest | ReAct agent execution |
-| **Google Gemini** | gemini-2.0-flash-lite | LLM brain |
+| **Google Gemini** | gemini-2.0-flash | LLM brain |
 | **Flask** | Latest | Web server / webhook receiver |
 | **Twilio** | Latest | WhatsApp messaging API |
 | **DuckDuckGo Search** | Latest | Free web search |
